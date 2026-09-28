@@ -3,7 +3,9 @@
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-TMP=$(mktemp -d "${TMPDIR:-/tmp}/parabol-builder-test.XXXXXX")
+# Prepare inside the work tree like CI does; .cache/ is git-ignored.
+mkdir -p "$ROOT/.cache"
+TMP=$(mktemp -d "$ROOT/.cache/test.XXXXXX")
 trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 
 python3 -m unittest discover -s "$ROOT/tests" -v

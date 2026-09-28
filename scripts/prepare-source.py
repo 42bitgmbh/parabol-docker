@@ -131,14 +131,21 @@ def apply_patches(source: Path) -> None:
     patches = sorted((ROOT / "patches").glob("*.patch"))
     if not patches:
         raise ValueError("no downstream patches found")
+    # Inside an enclosing git work tree (e.g. a CI checkout), git apply resolves paths from
+    # that repo's root and silently skips the patch; stop repository discovery at source.
+    env = {**os.environ, "GIT_CEILING_DIRECTORIES": str(source.parent)}
     for patch in patches:
         subprocess.run(
             ["git", "apply", "--check", "--unidiff-zero", "--whitespace=error-all", str(patch)],
             cwd=source,
+            env=env,
             check=True,
         )
         subprocess.run(
-            ["git", "apply", "--unidiff-zero", "--whitespace=error-all", str(patch)], cwd=source, check=True
+            ["git", "apply", "--unidiff-zero", "--whitespace=error-all", str(patch)],
+            cwd=source,
+            env=env,
+            check=True,
         )
 
 
