@@ -1,0 +1,7 @@
+diff --git a/scripts/webpack/prod.servers.config.js b/scripts/webpack/prod.servers.config.js
+index 0e94e7c90..01801e541 100644
+--- a/scripts/webpack/prod.servers.config.js
++++ b/scripts/webpack/prod.servers.config.js
+@@ -22 +22 @@ const DUMP_ON_USR2 = path.join(SERVER_ROOT, 'dumpOnUSR2.ts')
+-const COMMIT_HASH = cp.execSync('git rev-parse HEAD').toString().trim()
++const COMMIT_HASH = process.env.PARABOL_SOURCE_SHA || cp.execSync('git rev-parse HEAD').toString().trim()

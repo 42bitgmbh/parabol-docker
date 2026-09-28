@@ -1,0 +1,70 @@
+# Example stack: Parabol, PostgreSQL with pgvector, and Valkey.
+# Runs as-is on http://localhost:3000. For a real deployment, replace every "change-me",
+# put Parabol behind a TLS reverse proxy and set HOST / PROTO accordingly.
+# All options: https://github.com/ParabolInc/parabol/blob/master/.env.example
+
+x-postgres: &postgres
+  POSTGRES_USER: parabol
+  POSTGRES_PASSWORD: change-me
+  POSTGRES_DB: parabol
+
+services:
+  parabol:
+    image: ghcr.io/42bitgmbh/parabol:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    volumes:
+      - parabol-files:/home/node/parabol/self-hosted
+    environment:
+      <<: *postgres
+      HOST: localhost # public hostname, e.g. parabol.example.com
+      PROTO: http # https behind a TLS reverse proxy
+      PORT: "3000"
+      SERVER_ID: "1"
+      SERVER_SECRET: change-me # e.g. openssl rand -hex 32
+      STATIC_ASSET_PATH: /static/
+      FILE_STORE_PROVIDER: local
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USE_PGVECTOR: "true"
+      REDIS_URL: redis://valkey:6379
+      AUTH_GOOGLE_DISABLED: "true"
+      AUTH_MICROSOFT_DISABLED: "true"
+      AUTH_SSO_DISABLED: "true"
+      AI_EMBEDDER_WORKERS: "0"
+      DISABLE_GOOGLE_CLOUD_NATURAL_LANGUAGE: "true"
+      # Without SMTP, emails (including signup verification links) go to `docker compose logs parabol`.
+      MAIL_PROVIDER: debug
+      # MAIL_PROVIDER: smtp
+      # MAIL_SMTP_URL: smtps://user:password@smtp.example.com
+      # MAIL_FROM: parabol@example.com
+      CHRONOS_BATCH_EMAILS: "0 0 10 * * *"
+      CHRONOS_SCHEDULE_JOBS: "0 */10 * * * *"
+      CHRONOS_UPDATE_TOKENS: "0 0 0 1,15 * *"
+      CHRONOS_PROCESS_RECURRENCE: "0 */5 * * * *"
+      CHRONOS_AUTOPAUSE: "0 0 5 * * *"
+
+  postgres:
+    image: pgvector/pgvector:0.8.2-pg18-trixie
+    restart: unless-stopped
+    environment: *postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: pg_isready -U parabol -d parabol
+      interval: 5s
+      retries: 20
+
+  valkey:
+    image: valkey/valkey:9.0-alpine
+    restart: unless-stopped
+
+volumes:
+  parabol-files:
+  postgres-data:

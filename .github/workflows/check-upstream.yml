@@ -1,0 +1,48 @@
+name: Check upstream release
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Look for a newer stable Parabol release
+        id: pin
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/release-check.py --write
+          git diff --quiet upstream.json || echo "tag=$(jq -r .tag upstream.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Open update pull request
+        if: steps.pin.outputs.tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.pin.outputs.tag }}
+        run: |
+          branch="update/parabol-$TAG"
+          if git ls-remote --exit-code --heads origin "$branch"; then
+            echo "$branch already exists"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git commit -am "Update Parabol to $TAG"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "Update Parabol to $TAG" \
+            --body "Upstream release notes: https://github.com/ParabolInc/parabol/releases/tag/$TAG" \
+            --reviewer "$GITHUB_REPOSITORY_OWNER"
+          # Pushes and PRs made with GITHUB_TOKEN don't trigger other workflows, so start the build check explicitly.
+          gh workflow run build.yml --ref "$branch"

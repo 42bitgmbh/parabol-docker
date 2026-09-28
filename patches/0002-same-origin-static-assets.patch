@@ -1,0 +1,75 @@
+diff --git a/packages/server/initPublicPath.ts b/packages/server/initPublicPath.ts
+index a5869bfb9..de523cdd3 100644
+--- a/packages/server/initPublicPath.ts
++++ b/packages/server/initPublicPath.ts
+@@ -1,0 +2 @@ import appOrigin from './appOrigin'
++import {resolvePublicPath} from './resolvePublicPath'
+@@ -3 +4 @@ import appOrigin from './appOrigin'
+-const {CDN_BASE_URL, SOCKET_PORT, PROXY_CDN} = process.env
++const {CDN_BASE_URL, SOCKET_PORT, PROXY_CDN, STATIC_ASSET_PATH} = process.env
+@@ -5,15 +6,8 @@ const {CDN_BASE_URL, SOCKET_PORT, PROXY_CDN} = process.env
+-if (CDN_BASE_URL) {
+-  if (PROXY_CDN === 'true') {
+-    // for PPMIs where a public bucket is not allowed, we special case build files
+-    // sending the user to /build and 307 them to the CDN with a presigned URL
+-    __webpack_public_path__ = '/build/'
+-  } else {
+-    // pushToCDN#pushServerAssetsToCDN ensures all assets will be available on the CDN
+-    __webpack_public_path__ = `${CDN_BASE_URL.replace(/^\/{2,}/, 'https://')}/build/`
+-  }
+-} else {
+-  const url = new URL('/static/', appOrigin)
+-  // the webpack dev server uses /static on PORT, so fetch assets at SOCKET_PORT
+-  url.port = __PRODUCTION__ ? url.port : SOCKET_PORT!
+-  __webpack_public_path__ = url.toString()
+-}
++__webpack_public_path__ = resolvePublicPath({
++  appOrigin,
++  cdnBaseUrl: CDN_BASE_URL,
++  isProduction: __PRODUCTION__,
++  proxyCdn: PROXY_CDN,
++  socketPort: SOCKET_PORT,
++  staticAssetPath: STATIC_ASSET_PATH
++})
+diff --git a/packages/server/resolvePublicPath.ts b/packages/server/resolvePublicPath.ts
+new file mode 100644
+index 000000000..e51f224f2
+--- /dev/null
++++ b/packages/server/resolvePublicPath.ts
+@@ -0,0 +1,36 @@
++interface PublicPathOptions {
++  appOrigin: string
++  cdnBaseUrl?: string
++  isProduction: boolean
++  proxyCdn?: string
++  socketPort?: string
++  staticAssetPath?: string
++}
++
++const validateStaticAssetPath = (staticAssetPath: string) => {
++  if (!/^\/(?!\/)[^?#\\]*\/$/.test(staticAssetPath)) {
++    throw new Error(
++      'STATIC_ASSET_PATH must be a same-origin absolute path that starts and ends with "/"'
++    )
++  }
++  return staticAssetPath
++}
++
++export const resolvePublicPath = ({
++  appOrigin,
++  cdnBaseUrl,
++  isProduction,
++  proxyCdn,
++  socketPort,
++  staticAssetPath
++}: PublicPathOptions) => {
++  if (staticAssetPath) return validateStaticAssetPath(staticAssetPath)
++  if (cdnBaseUrl) {
++    if (proxyCdn === 'true') return '/build/'
++    return `${cdnBaseUrl.replace(/^\/{2,}/, 'https://')}/build/`
++  }
++  const url = new URL('/static/', appOrigin)
++  // the webpack dev server uses /static on PORT, so fetch assets at SOCKET_PORT
++  url.port = isProduction ? url.port : socketPort!
++  return url.toString()
++}
