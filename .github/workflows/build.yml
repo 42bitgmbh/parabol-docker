@@ -8,7 +8,7 @@ on:
       - patches/**
       - overlay/**
       - scripts/prepare-source.py
-      - .github/workflows/build.yml
+  # Workflow-only changes are verified by the PR build; publish manually if needed.
   pull_request:
   workflow_dispatch:
 
