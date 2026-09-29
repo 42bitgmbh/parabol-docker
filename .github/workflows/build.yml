@@ -31,9 +31,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v5
@@ -91,7 +91,10 @@ jobs:
   publish:
     if: github.ref == 'refs/heads/main'
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v5
 
@@ -109,9 +112,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Tag multi-arch image
+      - name: Tag multi-arch image and create release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/parabol"
           tag=$(jq -r .tag upstream.json)
           docker buildx imagetools create -t "$image:$tag" -t "$image:latest" \
             $(cd "$RUNNER_TEMP/digests" && printf "$image@sha256:%s " *)
+          # Rebuilds of an already released upstream version only refresh the image tags.
+          gh release view "$tag" >/dev/null 2>&1 && exit 0
+          gh release create "$tag" --target "$GITHUB_SHA" --title "Parabol $tag" --notes "\`\`\`
+          docker pull $image:$tag
+          \`\`\`
+
+          Upstream release notes: https://github.com/ParabolInc/parabol/releases/tag/$tag"
