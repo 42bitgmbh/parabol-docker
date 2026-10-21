@@ -28,7 +28,6 @@ REQUIRED_SOURCE_PATHS = (
     "scripts/toolboxSrc/preDeploy.ts",
     "packages/server/initPublicPath.ts",
     "docker/images/parabol-ubi/environments/pipeline",
-    "docker/images/parabol-ubi/tools/ip-to-server_id/package.json",
     "static/fonts",
 )
 
