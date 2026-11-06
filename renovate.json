@@ -1,0 +1,57 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended",
+        "helpers:pinGitHubActionDigestsToSemver"
+    ],
+    "timezone": "Europe/Vienna",
+    "automerge": false,
+    "labels": [
+        "renovate"
+    ],
+    "packageRules": [
+        {
+            "description": "Node base image of the build and runtime stage: upstream sets the major (engines in its package.json), so no majors here",
+            "matchFileNames": [
+                "overlay/docker/selfhost/Dockerfile"
+            ],
+            "matchPackageNames": [
+                "node"
+            ],
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "enabled": false
+        },
+        {
+            "description": "Node base image: a merge rebuilds and republishes the current Parabol tag",
+            "matchFileNames": [
+                "overlay/docker/selfhost/Dockerfile"
+            ],
+            "matchPackageNames": [
+                "node"
+            ],
+            "prBodyNotes": [
+                "The PR build has to pass. The merge rebuilds the image and moves the tag of the current Parabol version (upstream.json) to the new build, deployments pick it up with their next pull."
+            ]
+        },
+        {
+            "description": "Example stack: images only, the parabol image itself stays on latest",
+            "matchFileNames": [
+                "docker-compose.yml"
+            ],
+            "groupName": "example stack",
+            "prBodyNotes": [
+                "Only the example docker-compose.yml, nothing gets built or published. Postgres majors (pgNN in the pgvector tag) are not proposed."
+            ]
+        },
+        {
+            "description": "GitHub Actions in one PR, releases only after 3 days (a hijacked tag is usually found by then). The workflows can push packages and releases",
+            "matchManagers": [
+                "github-actions"
+            ],
+            "groupName": "GitHub Actions",
+            "minimumReleaseAge": "3 days"
+        }
+    ]
+}
