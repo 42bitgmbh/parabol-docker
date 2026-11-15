@@ -1,5 +1,5 @@
 # This file is materialized by prepare-source.py; placeholders fail closed.
-FROM node:26.10.0-trixie-slim@sha256:930557a230abacbc3f4fd9b8648abf8f4bee1e17cb72195dcdfb2f709bc85b33 AS build
+FROM node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS build
 ARG BUILD_HEAP_MB=3072
 ENV CI=true HUSKY=0 PARABOL_SOURCE_SHA=@@SOURCE_COMMIT@@
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git python3 build-essential \
@@ -16,7 +16,7 @@ RUN git config --global url."https://github.com/enahum/redux-offline.git".instea
     && NODE_OPTIONS="--max-old-space-size=${BUILD_HEAP_MB}" node docker/selfhost/build.cjs \
     && test -s dist/web.js && test -s dist/preDeploy.js && test -d build
 
-FROM node:26.10.0-trixie-slim@sha256:930557a230abacbc3f4fd9b8648abf8f4bee1e17cb72195dcdfb2f709bc85b33 AS runtime
+FROM node:26.13.1-trixie-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS runtime
 ARG BUILD_REVISION
 ENV HOME=/home/node USER=node FONTCONFIG_PATH=/etc/fonts PORT=3000 NODE_ENV=production
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates fontconfig \
