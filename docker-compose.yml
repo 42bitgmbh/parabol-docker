@@ -51,7 +51,7 @@ services:
       CHRONOS_AUTOPAUSE: "0 0 5 * * *"
 
   postgres:
-    image: pgvector/pgvector:0.8.2-pg18-trixie
+    image: pgvector/pgvector:0.8.7-pg18-trixie
     restart: unless-stopped
     environment: *postgres
     volumes:
@@ -62,7 +62,7 @@ services:
       retries: 20
 
   valkey:
-    image: valkey/valkey:9.0-alpine
+    image: valkey/valkey:9.2-alpine
     restart: unless-stopped
 
 volumes:
