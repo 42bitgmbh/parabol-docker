@@ -1,8 +1,8 @@
 {
   "repository": "https://github.com/ParabolInc/parabol",
-  "tag": "v15.23.0",
-  "version": "15.23.0",
-  "commit": "1239d08f17c1e3b6a6368588454af5e6e3527b37",
-  "archive_url": "https://codeload.github.com/ParabolInc/parabol/tar.gz/1239d08f17c1e3b6a6368588454af5e6e3527b37",
-  "archive_sha256": "88a1a822cea34a2e4be0044ed7282f67b37c810704951576cdb997712cd46be1"
+  "tag": "v15.32.1",
+  "version": "15.32.1",
+  "commit": "bf64b75e7175b8cfcbc8bc42806378c9e3c43672",
+  "archive_url": "https://codeload.github.com/ParabolInc/parabol/tar.gz/bf64b75e7175b8cfcbc8bc42806378c9e3c43672",
+  "archive_sha256": "9a7d5e76fbdc6331a663c0070af9d59083b09cb2f10982c21e274c36296f3979"
 }
